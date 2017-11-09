@@ -4,33 +4,32 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Toast;
+import android.view.View;
 
-import com.bearpot.dgjung.nileblue.Database.DBHelper;
+import com.bearpot.dgjung.nileblue.Database.LocationStateDBHelper;
+import com.bearpot.dgjung.nileblue.Database.MemoDBHelper;
 import com.bearpot.dgjung.nileblue.Services.LocationService;
-import com.google.android.gms.awareness.Awareness;
-import com.google.android.gms.awareness.snapshot.LocationResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
+import com.bearpot.dgjung.nileblue.VO.LocationVo;
+import com.bearpot.dgjung.nileblue.VO.MemoVo;
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.*;
 import com.google.android.gms.maps.model.*;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
+
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLongClickListener, OnMapReadyCallback {
 
-    private DBHelper dbHelper;
+    private LocationStateDBHelper locationStateDbHelper;
+    private MemoDBHelper memoDBHelper;
+
+    private Intent intent;
 
     private FusedLocationProviderClient mFusedLocationClient;
     private Location mLastLocation;
@@ -41,7 +40,8 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        dbHelper = new DBHelper(getApplicationContext(), "nileblue.db", null,1);
+        locationStateDbHelper = new LocationStateDBHelper(getApplicationContext(), "nileblue.db", null,1);
+        memoDBHelper = new MemoDBHelper(getApplicationContext(), "nileblue.db", null,1);
 
         // Google Map Fragment
         MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
@@ -60,18 +60,14 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
                 .build();
         awarenessClient.connect();*/
 
-        Intent intent = new Intent(MainActivity.this, LocationService.class);
-        startService(intent);
+        startService(new Intent(MainActivity.this, LocationService.class));
     }
 
     @Override
     public void onMapReady(final GoogleMap googleMap) {
-        Log.d("EYEDEAR", String.valueOf(dbHelper.getLocationLat()));
-        Log.d("EYEDEAR", String.valueOf(dbHelper.getLocationLng()));
+        List<MemoVo> list = null;
 
-        googleMap.setOnMapLongClickListener(this);
-
-        LatLng lastPosition = new LatLng(dbHelper.getLocationLat(), dbHelper.getLocationLng());
+        LatLng lastPosition = new LatLng(locationStateDbHelper.getLocationLat(), locationStateDbHelper.getLocationLng());
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(lastPosition, 13));
 
         int REQUEST_CODE_LOCATION = 2;
@@ -83,10 +79,39 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
         } else {
             googleMap.setMyLocationEnabled(true);
         }
+
+        googleMap.setOnMapLongClickListener(this);
+
+        list = getAllMarker();
+        for (int i = 0; i < list.size(); i++) {
+            Marker marker = googleMap.addMarker(new MarkerOptions().position(list.get(i).getLatLng()));
+            marker.setTag(list.get(i).getDescription());
+        }
+
+    }
+
+    public List<MemoVo> getAllMarker() {
+        return memoDBHelper.getAllMemos();
     }
 
     @Override
     public void onMapLongClick(LatLng latLng) {
         Log.d("EYEDEAR", String.valueOf(latLng));
+        loadMemoActivity(new LocationVo(latLng.latitude, latLng.longitude));
+    }
+
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.fab:
+                loadMemoActivity(new LocationVo(locationStateDbHelper.getLocationLat(), locationStateDbHelper.getLocationLng()));
+                break;
+        }
+    }
+
+    public void loadMemoActivity(LocationVo locationVo) {
+        intent = new Intent(MainActivity.this, MemoActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.putExtra("currentPosition", locationVo);
+        startActivity(intent);
     }
 }

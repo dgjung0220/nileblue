@@ -9,25 +9,20 @@ import android.database.sqlite.SQLiteOpenHelper;
  * Created by dg.jung on 2017-11-06.
  */
 
-public class DBHelper extends SQLiteOpenHelper {
+public class LocationStateDBHelper extends SQLiteOpenHelper {
 
-    public DBHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
+    public LocationStateDBHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
         super(context, name, factory, version);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
 
-        // TABLE : LOCATION
+        // TABLE : CURRENT LOCATION STATE
         db.execSQL("CREATE TABLE LOCATION (" +
                 "Lat double, " +
                 "Lng double)");
 
-        // TABLE : MEMO
-        db.execSQL("CREATE TABLE MEMO (" +
-                "Lat double, " +
-                "Lng double, " +
-                "description String)");
     }
 
     @Override
@@ -63,4 +58,5 @@ public class DBHelper extends SQLiteOpenHelper {
         }
         return result;
     }
+
 }

@@ -11,7 +11,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
-import com.bearpot.dgjung.nileblue.Database.DBHelper;
+import com.bearpot.dgjung.nileblue.Database.LocationStateDBHelper;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -24,7 +24,7 @@ import com.google.android.gms.tasks.Task;
 public class LocationService extends Service {
 
     private FusedLocationProviderClient mFusedLocationClient;
-    private DBHelper dbhelper;
+    private LocationStateDBHelper dbhelper;
     Location mLastLocation;
 
 
@@ -44,7 +44,7 @@ public class LocationService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
 
-        dbhelper = new DBHelper(getApplicationContext(), "nileblue.db", null,1);
+        dbhelper = new LocationStateDBHelper(getApplicationContext(), "nileblue.db", null,1);
         getLastLocation();
 
         return START_STICKY;
