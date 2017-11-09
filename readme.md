@@ -1,6 +1,6 @@
 # Context Awareness Prototype v.1
 
-** Context Awareness Prototype v.1 for testing awareness api of Google.
+**Context Awareness Prototype v.1 for testing awareness api of Google.**
 
 ## Requirements
 
@@ -19,7 +19,7 @@
 #### Android Studio
 version 3.0
 #### Emulator
-``js
+```bash
 Name: Nexus_5X_API_24
 
 CPU/ABI: Google Play Intel Atom (x86)
@@ -107,4 +107,4 @@ hw.sensors.orientation: yes
 avd.ini.encoding: UTF-8
 
 hw.gpu.enabled: yes
-``js
+```
