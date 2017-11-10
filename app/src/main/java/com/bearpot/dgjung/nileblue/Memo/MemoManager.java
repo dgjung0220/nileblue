@@ -13,7 +13,7 @@ import com.bearpot.dgjung.nileblue.Database.MemoDBHelper;
 public class MemoManager {
 
     private MemoDBHelper memoDBHelper;
-    private Context mContext = null;
+    Context mContext = null;
 
     public MemoManager(Context context) {
         mContext = context;
@@ -24,8 +24,11 @@ public class MemoManager {
         if (description == null) {
             return;
         }
-
         memoDBHelper.save(lat, lng, description);
+    }
+
+    public void delete(int memo_id) {
+        memoDBHelper.delete(memo_id);
     }
 
 }

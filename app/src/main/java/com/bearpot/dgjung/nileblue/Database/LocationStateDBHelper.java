@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 /**
  * Created by dg.jung on 2017-11-06.
@@ -17,18 +18,19 @@ public class LocationStateDBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-
         // TABLE : CURRENT LOCATION STATE
-        db.execSQL("CREATE TABLE LOCATION (" +
+        db.execSQL("CREATE TABLE IF NOT EXISTS LOCATION(" +
                 "Lat double, " +
                 "Lng double)");
-
+        db.execSQL("CREATE TABLE IF NOT EXISTS MEMO(" +
+                "memo_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "Lat double, " +
+                "Lng double, " +
+                "description String)");
     }
 
     @Override
-    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
-
-    }
+    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {}
 
     public void updateLocation(String lat, String lng) {
         SQLiteDatabase db = getWritableDatabase();
@@ -56,6 +58,7 @@ public class LocationStateDBHelper extends SQLiteOpenHelper {
         while (cursor.moveToNext()) {
             result = cursor.getDouble(0);
         }
+        cursor.close();
         return result;
     }
 

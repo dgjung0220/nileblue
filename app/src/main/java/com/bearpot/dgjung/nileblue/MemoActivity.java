@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import com.bearpot.dgjung.nileblue.Memo.MemoManager;
 import com.bearpot.dgjung.nileblue.VO.LocationVo;
+import com.bearpot.dgjung.nileblue.VO.MemoVo;
 import com.google.android.gms.maps.model.LatLng;
 
 /**
@@ -21,8 +22,9 @@ import com.google.android.gms.maps.model.LatLng;
 
 public class MemoActivity extends AppCompatActivity {
     private EditText memoEdit = null;
-    private MemoManager mManager = new MemoManager(this);
+    private MemoManager mManager = null;
     private LocationVo currentPosition;
+    private MemoVo memoInfo;
 
     private Intent intent;
 
@@ -32,9 +34,15 @@ public class MemoActivity extends AppCompatActivity {
         setContentView(R.layout.memo_main);
 
         memoEdit = (EditText) findViewById(R.id.memo_edit);
+        mManager = new MemoManager(this);
 
         intent = new Intent(this.getIntent());
         currentPosition = (LocationVo) intent.getSerializableExtra("currentPosition");
+        memoInfo = (MemoVo) intent.getSerializableExtra("memoInfo");
+
+        if (memoInfo != null) {
+            memoEdit.setText(memoInfo.getDescription());
+        }
     }
 
     public void onClick(View v) {
@@ -50,7 +58,11 @@ public class MemoActivity extends AppCompatActivity {
             }
 
             case R.id.delete_btn: {
+                mManager.delete(memoInfo.getMemoId());
+                returnToMain();
 
+                Toast.makeText(this,"마커가 삭제되었습니다.", Toast.LENGTH_SHORT).show();
+                break;
             }
         }
     }

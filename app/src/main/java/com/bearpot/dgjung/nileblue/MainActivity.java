@@ -1,14 +1,17 @@
 package com.bearpot.dgjung.nileblue;
 
 import android.Manifest;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import com.bearpot.dgjung.nileblue.Database.LocationStateDBHelper;
 import com.bearpot.dgjung.nileblue.Database.MemoDBHelper;
@@ -24,7 +27,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLongClickListener, OnMapReadyCallback {
+public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerClickListener, OnMapReadyCallback {
 
     private LocationStateDBHelper locationStateDbHelper;
     private MemoDBHelper memoDBHelper;
@@ -65,8 +68,6 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
 
     @Override
     public void onMapReady(final GoogleMap googleMap) {
-        List<MemoVo> list = null;
-
         LatLng lastPosition = new LatLng(locationStateDbHelper.getLocationLat(), locationStateDbHelper.getLocationLng());
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(lastPosition, 13));
 
@@ -81,17 +82,31 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
         }
 
         googleMap.setOnMapLongClickListener(this);
-
-        list = getAllMarker();
-        for (int i = 0; i < list.size(); i++) {
-            Marker marker = googleMap.addMarker(new MarkerOptions().position(list.get(i).getLatLng()));
-            marker.setTag(list.get(i).getDescription());
-        }
+        addAllMarker(googleMap);
+        googleMap.setOnMarkerClickListener(this);
 
     }
 
-    public List<MemoVo> getAllMarker() {
-        return memoDBHelper.getAllMemos();
+    public boolean onMarkerClick(final Marker marker) {
+        String description = (String) marker.getTag();
+
+        if (description != null) {
+            loadMemoActivity(Integer.parseInt(description.split("/")[0]), description.split("/")[1]);
+            return true;
+        }
+
+        return false;
+    }
+
+    public void addAllMarker(GoogleMap googleMap) {
+        List<MemoVo> list = memoDBHelper.getAllMemos();
+
+        if(list != null) {
+            for (int i = 0; i < list.size(); i++) {
+                Marker marker = googleMap.addMarker(new MarkerOptions().position(list.get(i).getLatLng()));
+                marker.setTag(list.get(i).getMemoId()+"/"+list.get(i).getDescription());
+            }
+        }
     }
 
     @Override
@@ -112,6 +127,13 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
         intent = new Intent(MainActivity.this, MemoActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         intent.putExtra("currentPosition", locationVo);
+        startActivity(intent);
+    }
+
+    public void loadMemoActivity(int memo_id, String description) {
+        intent = new Intent(MainActivity.this, MemoActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.putExtra("memoInfo", new MemoVo(memo_id, description) );
         startActivity(intent);
     }
 }

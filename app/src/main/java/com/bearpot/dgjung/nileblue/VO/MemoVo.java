@@ -14,6 +14,10 @@ public class MemoVo implements Serializable {
     private String description;
 
     public MemoVo(){}
+    public MemoVo(int memo_id, String description) {
+        this.memo_id = memo_id;
+        this.description = description;
+    }
     public MemoVo(int memo_id, LocationVo locationVo, String description) {
         this.memo_id = memo_id;
         this.location = locationVo;
