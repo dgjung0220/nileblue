@@ -27,6 +27,13 @@ public class MemoManager {
         memoDBHelper.save(lat, lng, description);
     }
 
+    public void save(int memo_id, double lat, double lng, String description) {
+        if (description == null) {
+            return;
+        }
+        memoDBHelper.save(memo_id, lat, lng, description);
+    }
+
     public void delete(int memo_id) {
         memoDBHelper.delete(memo_id);
     }

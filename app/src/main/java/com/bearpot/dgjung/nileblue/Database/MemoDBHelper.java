@@ -32,6 +32,11 @@ public class MemoDBHelper extends SQLiteOpenHelper {
         db.execSQL("INSERT INTO MEMO(Lat,Lng,description) VALUES ("+lat+","+lng+",'"+description+"')");
     }
 
+    public void save (int memo_id, double lat, double lng, String description) {
+        SQLiteDatabase db = getWritableDatabase();
+        db.execSQL("UPDATE MEMO SET description='"+description+"' where memo_id="+memo_id);
+    }
+
     public void delete (int memo_id) {
         SQLiteDatabase db = getWritableDatabase();
         db.execSQL("DELETE FROM MEMO WHERE memo_id = " +memo_id);

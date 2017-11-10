@@ -28,6 +28,8 @@ public class MemoActivity extends AppCompatActivity {
 
     private Intent intent;
 
+    private boolean editable;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,6 +44,7 @@ public class MemoActivity extends AppCompatActivity {
 
         if (memoInfo != null) {
             memoEdit.setText(memoInfo.getDescription());
+            editable = true;
         }
     }
 
@@ -49,11 +52,18 @@ public class MemoActivity extends AppCompatActivity {
         switch (v.getId()) {
             case R.id.save_btn: {
                 String description = memoEdit.getText().toString();
-                mManager.save(currentPosition.getLat(),currentPosition.getLng(),description);
-                returnToMain();
-                memoEdit.setText("");
 
-                Toast.makeText(this,"마커가 저장되었습니다.", Toast.LENGTH_SHORT).show();
+                if (!editable) {
+                    mManager.save(currentPosition.getLat(),currentPosition.getLng(),description);
+                    Toast.makeText(this,"마커가 저장되었습니다.", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, description, Toast.LENGTH_SHORT).show();
+                    mManager.save(memoInfo.getMemoId(), memoInfo.getLocation().getLat(), memoInfo.getLocation().getLng(), description);
+                    Toast.makeText(this,"마커가 수정되었습니다.", Toast.LENGTH_SHORT).show();
+                }
+                memoEdit.setText("");
+                returnToMain();
+
                 break;
             }
 

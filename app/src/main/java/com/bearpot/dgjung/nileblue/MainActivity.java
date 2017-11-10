@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
         String description = (String) marker.getTag();
 
         if (description != null) {
-            loadMemoActivity(Integer.parseInt(description.split("/")[0]), description.split("/")[1]);
+            loadMemoActivity(Integer.parseInt(description.split("/")[0]), marker.getPosition().latitude, marker.getPosition().longitude, description.split("/")[1]);
             return true;
         }
 
@@ -130,10 +130,10 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
         startActivity(intent);
     }
 
-    public void loadMemoActivity(int memo_id, String description) {
+    public void loadMemoActivity(int memo_id, double lat, double lon, String description) {
         intent = new Intent(MainActivity.this, MemoActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        intent.putExtra("memoInfo", new MemoVo(memo_id, description) );
+        intent.putExtra("memoInfo", new MemoVo(memo_id, lat, lon, description) );
         startActivity(intent);
     }
 }
