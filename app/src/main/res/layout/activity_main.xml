@@ -7,6 +7,7 @@
     android:fitsSystemWindows="true"
     tools:context="com.bearpot.dgjung.nileblue.MainActivity">
 
+
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
         android:layout_width="wrap_content"

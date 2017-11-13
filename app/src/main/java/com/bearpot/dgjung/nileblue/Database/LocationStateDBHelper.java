@@ -27,6 +27,14 @@ public class LocationStateDBHelper extends SQLiteOpenHelper {
                 "Lat double, " +
                 "Lng double, " +
                 "description String)");
+        db.execSQL("CREATE TABLE IF NOT EXISTS PLACES(" +
+                "place_id  String," +
+                "name String," +
+                "Lat double, " +
+                "Lng double, " +
+                "rating String," +
+                "icon String," +
+                "openNow boolean)");
     }
 
     @Override
