@@ -1,32 +1,42 @@
 package com.bearpot.dgjung.nileblue;
 
 import android.Manifest;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.PixelFormat;
 import android.graphics.drawable.ColorDrawable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bearpot.dgjung.nileblue.Database.LocationStateDBHelper;
 import com.bearpot.dgjung.nileblue.Database.MemoDBHelper;
 import com.bearpot.dgjung.nileblue.Database.PlaceDBHelper;
+import com.bearpot.dgjung.nileblue.Services.AwarenessService;
 import com.bearpot.dgjung.nileblue.Services.GetRecommandPlace;
-import com.bearpot.dgjung.nileblue.Services.LocationService;
 import com.bearpot.dgjung.nileblue.VO.LocationVo;
 import com.bearpot.dgjung.nileblue.VO.MemoVo;
 import com.bearpot.dgjung.nileblue.VO.PlaceVo;
+import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.*;
 import com.google.android.gms.maps.model.*;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerClickListener, OnMapReadyCallback {
@@ -39,17 +49,21 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
     private List<PlaceVo> recommandPlaceList;
     private GoogleMap gMap;
     private Intent intent;
-    //private GoogleApiClient awarenessClient;
+
+    private ArrayList<Geofence> mGeofenceList;
+    private PendingIntent mGeofenceRequestIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        locationStateDbHelper = new LocationStateDBHelper(getApplicationContext(), "nileblue.db", null,1);
-        memoDBHelper = new MemoDBHelper(getApplicationContext(), "nileblue.db", null,1);
-        placeDBHelper = new PlaceDBHelper(getApplicationContext(), "nileblue.db", null,1);
+        locationStateDbHelper = new LocationStateDBHelper(getApplicationContext(), "nileblue.db", null, 1);
+        memoDBHelper = new MemoDBHelper(getApplicationContext(), "nileblue.db", null, 1);
+        placeDBHelper = new PlaceDBHelper(getApplicationContext(), "nileblue.db", null, 1);
+
         recommandPlace = new GetRecommandPlace();
+        mGeofenceList = new ArrayList<Geofence>();
 
         // ActionBar
         //getSupportActionBar().setTitle("");
@@ -60,20 +74,7 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
         MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        // Google Awareness API
-        /*awarenessClient = new GoogleApiClient.Builder(getApplicationContext())
-                .addApi(Awareness.API)
-                .addApi(LocationServices.API)
-                .addConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
-                    @Override
-                    public void onConnected(@Nullable Bundle bundle) {}
-                    @Override
-                    public void onConnectionSuspended(int i) {}
-                })
-                .build();
-        awarenessClient.connect();*/
-
-        startService(new Intent(MainActivity.this, LocationService.class));
+        startService(new Intent(MainActivity.this, AwarenessService.class));
     }
 
     @Override
@@ -104,6 +105,11 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
         googleMap.setOnMarkerClickListener(this);
         addRecommandMarker(googleMap);
 
+        /*LocationServices.getGeofencingClient(this).addGeofences(getGeofencingRequeset(), getGeofenceTransitionPendingIntent())
+                .addOnSuccessListener(this, new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {}
+                });*/
     }
 
     public boolean onMarkerClick(final Marker marker) {
@@ -122,13 +128,37 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
     public void addAllMarker(GoogleMap googleMap) {
         List<MemoVo> list = memoDBHelper.getAllMemos();
 
-        if(list != null) {
+        if (list != null) {
             for (int i = 0; i < list.size(); i++) {
                 Marker marker = googleMap.addMarker(new MarkerOptions().position(list.get(i).getLatLng()));
-                marker.setTag(list.get(i).getMemoId()+"/"+list.get(i).getDescription());
+                marker.setTag(list.get(i).getMemoId() + "/" + list.get(i).getDescription());
+                //createGeofences(list.get(i).getLatLng().latitude, list.get(i).getLatLng().longitude);
             }
         }
     }
+
+    /*private GeofencingRequest getGeofencingRequeset() {
+        GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
+        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER | GeofencingRequest.INITIAL_TRIGGER_DWELL | GeofencingRequest.INITIAL_TRIGGER_EXIT);
+        builder.addGeofences(mGeofenceList);
+
+        return builder.build();
+    }
+
+    public void createGeofences(double latitude, double longitude) {
+        String id = UUID.randomUUID().toString();
+
+        Geofence fence = new Geofence.Builder()
+                .setRequestId(id)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_DWELL | Geofence.GEOFENCE_TRANSITION_EXIT)
+                .setCircularRegion(latitude, longitude, 500)
+                .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                .setLoiteringDelay(1000)
+                .build();
+
+
+        mGeofenceList.add(fence);
+    }*/
 
     public void addRecommandMarker(GoogleMap googleMap) {
         List<PlaceVo> result = placeDBHelper.select();
@@ -160,7 +190,7 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
                 placeDBHelper.delete();
                 Thread getRecommandThread = new Thread() {
                     public void run() {
-                        recommandPlaceList = recommandPlace.sendByHttp(locationStateDbHelper.getLocationLat(), locationStateDbHelper.getLocationLng(), 500, "point_of_interest");
+                        recommandPlaceList = recommandPlace.sendByHttp(locationStateDbHelper.getLocationLat(), locationStateDbHelper.getLocationLng(), 500, "restaurant");
 
                         if (recommandPlaceList != null && recommandPlaceList.size() > 0) {
 
@@ -187,10 +217,17 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
                     if (recommandPlaceList.size() == 0) {
                         Toast.makeText(this, "추천할 장소가 없습니다.", Toast.LENGTH_SHORT).show();
                     } else {
-                        Toast.makeText(this, recommandPlaceList.size() +"개의 추천 장소가 표시됩니다.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, recommandPlaceList.size() + "개의 추천 장소가 표시됩니다.", Toast.LENGTH_SHORT).show();
                         onMapReady(gMap);
                     }
                 }
+
+                break;
+
+            case R.id.weather_context:
+                intent = new Intent(MainActivity.this, WeatherActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
 
                 break;
         }
@@ -216,7 +253,7 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
     public void loadMemoActivity(int memo_id, double lat, double lon, String description) {
         intent = new Intent(MainActivity.this, MemoActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        intent.putExtra("memoInfo", new MemoVo(memo_id, lat, lon, description) );
+        intent.putExtra("memoInfo", new MemoVo(memo_id, lat, lon, description));
         startActivity(intent);
     }
 
@@ -230,4 +267,9 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
     protected void onResume() {
         super.onResume();
     }
+
+    /*private PendingIntent getGeofenceTransitionPendingIntent() {
+        Intent intent = new Intent(this, GeofenceTransitionsIntentService.class);
+        return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }*/
 }

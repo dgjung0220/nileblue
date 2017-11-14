@@ -6,6 +6,9 @@
     <item android:id="@+id/recommand_place"
         android:title="장소추천"
         app:showAsAction="ifRoom"/>
+    <item android:id="@+id/weather_context"
+        android:title="날씨"
+        app:showAsAction="withText"/>
     <item android:id="@+id/action_test"
         android:title="문의하기"
         app:showAsAction="withText"/>
