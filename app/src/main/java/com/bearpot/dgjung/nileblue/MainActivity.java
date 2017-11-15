@@ -2,18 +2,20 @@ package com.bearpot.dgjung.nileblue;
 
 import android.Manifest;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.drawable.ColorDrawable;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -24,17 +26,24 @@ import android.widget.Toast;
 import com.bearpot.dgjung.nileblue.Database.LocationStateDBHelper;
 import com.bearpot.dgjung.nileblue.Database.MemoDBHelper;
 import com.bearpot.dgjung.nileblue.Database.PlaceDBHelper;
+import com.bearpot.dgjung.nileblue.Services.WeatherFloatingService;
 import com.bearpot.dgjung.nileblue.Services.AwarenessService;
 import com.bearpot.dgjung.nileblue.Services.GetRecommandPlace;
 import com.bearpot.dgjung.nileblue.VO.LocationVo;
 import com.bearpot.dgjung.nileblue.VO.MemoVo;
 import com.bearpot.dgjung.nileblue.VO.PlaceVo;
+import com.bearpot.dgjung.nileblue.VO.WeatherVo;
+import com.google.android.gms.awareness.Awareness;
+import com.google.android.gms.awareness.SnapshotClient;
+import com.google.android.gms.awareness.snapshot.WeatherResponse;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.*;
 import com.google.android.gms.maps.model.*;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,6 +59,16 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
     private GoogleMap gMap;
     private Intent intent;
 
+    /* Weather */
+    private SnapshotClient snapshotClient;
+    private float mTouchX, mTouchY;
+    private int mViewX, mViewY;
+    private WeatherVo weatherVo;
+    private TextView weather_temperature = null;
+    private TextView weather_huminity;
+    private TextView weather_dewPoint;
+
+    /* GeoFence */
     private ArrayList<Geofence> mGeofenceList;
     private PendingIntent mGeofenceRequestIntent;
 
@@ -57,6 +76,7 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        View mainLayout = (View) findViewById(R.id.main_layout);
 
         locationStateDbHelper = new LocationStateDBHelper(getApplicationContext(), "nileblue.db", null, 1);
         memoDBHelper = new MemoDBHelper(getApplicationContext(), "nileblue.db", null, 1);
@@ -65,15 +85,11 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
         recommandPlace = new GetRecommandPlace();
         mGeofenceList = new ArrayList<Geofence>();
 
-        // ActionBar
-        //getSupportActionBar().setTitle("");
-        getSupportActionBar().setBackgroundDrawable(new ColorDrawable(0xFF339999));
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
         // Google Map Fragment
         MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        getWeather();
         startService(new Intent(MainActivity.this, AwarenessService.class));
     }
 
@@ -225,9 +241,7 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
                 break;
 
             case R.id.weather_context:
-                intent = new Intent(MainActivity.this, WeatherActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(intent);
+                startService(new Intent(this, WeatherFloatingService.class));
 
                 break;
         }
@@ -257,10 +271,80 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
         startActivity(intent);
     }
 
+    public void getWeather() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        snapshotClient = Awareness.getSnapshotClient(this);
+        snapshotClient.getWeather().addOnCompleteListener(new OnCompleteListener<WeatherResponse>() {
+            @Override
+            public void onComplete(@NonNull Task<WeatherResponse> task) {
+                if ((task.isSuccessful() && task.getResult() != null)) {
+                    WeatherResponse result = task.getResult();
+
+                    float temperature = Math.round(result.getWeather().getTemperature(2)*100.0f) / 100.0f;
+                    float feelsLikeTemperature = Math.round(result.getWeather().getFeelsLikeTemperature(2) * 100.0f) / 100.0f;
+                    float dewPoint = Math.round(result.getWeather().getDewPoint(2) * 100.0f) / 100.0f;
+                    int huminity = result.getWeather().getHumidity();
+                    int[] conditions = result.getWeather().getConditions();
+
+                    LayoutInflater mInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                    View mView = mInflater.inflate(R.layout.weather_floating_main, null);
+
+                    LinearLayout.LayoutParams mParams = new LinearLayout.LayoutParams(
+                            WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT);
+                    mParams.leftMargin = 20;
+                    mView.setAlpha(0.8f);
+                    getWindow().addContentView(mView, mParams);
+
+                    weather_temperature = mView.findViewById(R.id.weather_temperature);
+                    weather_huminity = mView.findViewById(R.id.weather_huminity);
+                    weather_dewPoint = mView.findViewById(R.id.weather_dewPoint);
+
+                    weather_temperature.setText(temperature+"/" + feelsLikeTemperature + "℃" );
+                    weather_huminity.setText(huminity+"%");
+                    weather_dewPoint.setText(dewPoint+"℃");
+
+                    /*View.OnTouchListener mTouchLister = new View.OnTouchListener() {
+                        @Override
+                        public boolean onTouch(View view, MotionEvent motionEvent) {
+                            Log.d("EYEDEAR","조터치");
+                            switch(motionEvent.getAction()) {
+                                case MotionEvent.ACTION_DOWN:
+                                    mTouchX = motionEvent.getRawX();
+                                    mTouchY = motionEvent.getRawY();
+                                    mViewX = mParams.x;
+                                    mViewY = mParams.y;
+
+                                    break;
+
+                                case MotionEvent.ACTION_CANCEL:
+                                case MotionEvent.ACTION_UP:
+                                    int x = (int) (motionEvent.getRawX() - mTouchX);
+                                    int y = (int) (motionEvent.getRawY() - mTouchY);
+
+                                    mParams.x = mViewX + x;
+                                    mParams.y = mViewY + y;
+
+                                    //updateViewLayout(mView, mParams);
+
+                                    break;
+                            }
+                            return true;
+                        }
+                    };
+
+                    mView.setOnTouchListener(mTouchLister);*/
+                }
+            }
+        });
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
         placeDBHelper.delete();
+        stopService(new Intent(this, WeatherFloatingService.class));
     }
 
     @Override

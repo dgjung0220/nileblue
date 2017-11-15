@@ -19,6 +19,7 @@ import android.util.Log;
 import com.bearpot.dgjung.nileblue.Database.LocationStateDBHelper;
 import com.bearpot.dgjung.nileblue.MainActivity;
 import com.bearpot.dgjung.nileblue.R;
+import com.bearpot.dgjung.nileblue.VO.WeatherVo;
 import com.google.android.gms.awareness.Awareness;
 import com.google.android.gms.awareness.SnapshotClient;
 import com.google.android.gms.awareness.snapshot.LocationResponse;
@@ -127,6 +128,12 @@ public class AwarenessService extends Service implements LocationListener {
                     }
 
                     notifyResult(String.valueOf(Math.round(temperature*100.0)/100.0)+"℃");
+
+                    /*Intent intent = new Intent(AwarenessService.this, MainActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    intent.putExtra("weatherInfo", new WeatherVo(conditions,temperature,feelsLikeTemperature,dewPoint,huminity));
+                    startActivity(intent);*/
+
                 } else {
                     notifyResult("Couldn't get weather information");
                 }
