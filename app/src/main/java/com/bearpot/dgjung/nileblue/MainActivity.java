@@ -5,19 +5,15 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.PixelFormat;
-import android.graphics.drawable.ColorDrawable;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.Window;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -26,9 +22,10 @@ import android.widget.Toast;
 import com.bearpot.dgjung.nileblue.Database.LocationStateDBHelper;
 import com.bearpot.dgjung.nileblue.Database.MemoDBHelper;
 import com.bearpot.dgjung.nileblue.Database.PlaceDBHelper;
-import com.bearpot.dgjung.nileblue.Services.WeatherFloatingService;
 import com.bearpot.dgjung.nileblue.Services.AwarenessService;
+import com.bearpot.dgjung.nileblue.Services.GeofenceTransitionsIntentService;
 import com.bearpot.dgjung.nileblue.Services.GetRecommandPlace;
+import com.bearpot.dgjung.nileblue.Services.WeatherFloatingService;
 import com.bearpot.dgjung.nileblue.VO.LocationVo;
 import com.bearpot.dgjung.nileblue.VO.MemoVo;
 import com.bearpot.dgjung.nileblue.VO.PlaceVo;
@@ -37,16 +34,24 @@ import com.google.android.gms.awareness.Awareness;
 import com.google.android.gms.awareness.SnapshotClient;
 import com.google.android.gms.awareness.snapshot.WeatherResponse;
 import com.google.android.gms.location.Geofence;
-import com.google.android.gms.maps.*;
-import com.google.android.gms.maps.model.*;
+import com.google.android.gms.location.GeofencingRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerClickListener, OnMapReadyCallback {
 
@@ -76,7 +81,6 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        View mainLayout = (View) findViewById(R.id.main_layout);
 
         locationStateDbHelper = new LocationStateDBHelper(getApplicationContext(), "nileblue.db", null, 1);
         memoDBHelper = new MemoDBHelper(getApplicationContext(), "nileblue.db", null, 1);
@@ -121,11 +125,14 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
         googleMap.setOnMarkerClickListener(this);
         addRecommandMarker(googleMap);
 
-        /*LocationServices.getGeofencingClient(this).addGeofences(getGeofencingRequeset(), getGeofenceTransitionPendingIntent())
-                .addOnSuccessListener(this, new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {}
-                });*/
+        if (!mGeofenceList.isEmpty()) {
+            LocationServices.getGeofencingClient(this).addGeofences(getGeofencingRequeset(), getGeofenceTransitionPendingIntent())
+                    .addOnSuccessListener(this, new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                        }
+                    });
+        }
     }
 
     public boolean onMarkerClick(final Marker marker) {
@@ -148,12 +155,12 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
             for (int i = 0; i < list.size(); i++) {
                 Marker marker = googleMap.addMarker(new MarkerOptions().position(list.get(i).getLatLng()));
                 marker.setTag(list.get(i).getMemoId() + "/" + list.get(i).getDescription());
-                //createGeofences(list.get(i).getLatLng().latitude, list.get(i).getLatLng().longitude);
+                createGeofences(list.get(i).getLatLng().latitude, list.get(i).getLatLng().longitude);
             }
         }
     }
 
-    /*private GeofencingRequest getGeofencingRequeset() {
+    private GeofencingRequest getGeofencingRequeset() {
         GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
         builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER | GeofencingRequest.INITIAL_TRIGGER_DWELL | GeofencingRequest.INITIAL_TRIGGER_EXIT);
         builder.addGeofences(mGeofenceList);
@@ -172,9 +179,8 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
                 .setLoiteringDelay(1000)
                 .build();
 
-
         mGeofenceList.add(fence);
-    }*/
+    }
 
     public void addRecommandMarker(GoogleMap googleMap) {
         List<PlaceVo> result = placeDBHelper.select();
@@ -352,8 +358,8 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
         super.onResume();
     }
 
-    /*private PendingIntent getGeofenceTransitionPendingIntent() {
+    private PendingIntent getGeofenceTransitionPendingIntent() {
         Intent intent = new Intent(this, GeofenceTransitionsIntentService.class);
         return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-    }*/
+    }
 }
