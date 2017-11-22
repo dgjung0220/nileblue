@@ -2,12 +2,10 @@ package com.bearpot.dgjung.nileblue;
 
 import android.Manifest;
 import android.app.PendingIntent;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
-import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -27,13 +25,11 @@ import com.bearpot.dgjung.nileblue.Database.MemoDBHelper;
 import com.bearpot.dgjung.nileblue.Database.PlaceDBHelper;
 import com.bearpot.dgjung.nileblue.Services.AlarmService;
 import com.bearpot.dgjung.nileblue.Services.GeofenceTransitionsIntentService;
-import com.bearpot.dgjung.nileblue.Services.WeatherFloatingService;
 import com.bearpot.dgjung.nileblue.Services.AwarenessService;
 import com.bearpot.dgjung.nileblue.Services.GetRecommandPlace;
 import com.bearpot.dgjung.nileblue.VO.LocationVo;
 import com.bearpot.dgjung.nileblue.VO.MemoVo;
 import com.bearpot.dgjung.nileblue.VO.PlaceVo;
-import com.bearpot.dgjung.nileblue.VO.WeatherVo;
 import com.google.android.gms.awareness.Awareness;
 import com.google.android.gms.awareness.SnapshotClient;
 import com.google.android.gms.awareness.snapshot.WeatherResponse;
@@ -52,6 +48,8 @@ import com.google.android.gms.tasks.Task;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import static android.widget.Toast.LENGTH_SHORT;
 
 public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLongClickListener, GoogleMap.OnMarkerClickListener, OnMapReadyCallback {
 
@@ -77,6 +75,9 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
     private AlarmService alarmService;
     boolean isAlarmServiceOn = false;
     private ServiceConnection conn;
+
+    /* */
+    String place_detail_url = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -152,7 +153,39 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
 
         googleMap.setOnMarkerClickListener(this);
         addRecommandMarker(googleMap);
+        googleMap.setOnInfoWindowClickListener(infoWindowClickListener);
     }
+
+    GoogleMap.OnInfoWindowClickListener infoWindowClickListener = new GoogleMap.OnInfoWindowClickListener() {
+        @Override
+        public void onInfoWindowClick(Marker marker) {
+            String place_id = (String) marker.getTag();
+            Toast.makeText(getApplicationContext(), place_id, Toast.LENGTH_SHORT).show();
+
+
+            Thread getPlaceDetailThread = new Thread() {
+                public void run() {
+                    place_detail_url = recommandPlace.getURL(place_id);
+                }
+            };
+            getPlaceDetailThread.start();
+
+            try {
+                getPlaceDetailThread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            if (place_detail_url != null) {
+                intent = new Intent(MainActivity.this, PlaceWebView.class);
+                intent.putExtra("url",place_detail_url);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+
+                Toast.makeText(getApplicationContext(), "상세뷰로 이동합니다.", LENGTH_SHORT).show();
+            }
+        }
+    };
 
     public boolean onMarkerClick(final Marker marker) {
         String description = (String) marker.getTag();
@@ -266,9 +299,9 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
 
                 if (recommandPlaceList != null) {
                     if (recommandPlaceList.size() == 0) {
-                        Toast.makeText(this, "추천할 장소가 없습니다.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "추천할 장소가 없습니다.", LENGTH_SHORT).show();
                     } else {
-                        Toast.makeText(this, recommandPlaceList.size() + "개의 추천 장소가 표시됩니다.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, recommandPlaceList.size() + "개의 추천 장소가 표시됩니다.", LENGTH_SHORT).show();
                         onMapReady(gMap);
                     }
                 }

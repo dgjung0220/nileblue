@@ -1,5 +1,6 @@
 package com.bearpot.dgjung.nileblue.Services;
 
+import android.os.AsyncTask;
 import android.util.Log;
 
 import com.bearpot.dgjung.nileblue.VO.PlaceVo;
@@ -20,11 +21,18 @@ import java.util.List;
  * Created by dg.jung on 2017-11-13.
  */
 
-public class GetRecommandPlace {
+public class GetRecommandPlace extends AsyncTask {
 
     private ArrayList<PlaceVo> recommandPlace;
 
     public GetRecommandPlace() {}
+
+    @Override
+    protected Object doInBackground(Object[] objects) {
+        getURL((String) objects[0]);
+        return null;
+    }
+
     public List<PlaceVo> sendByHttp(double lat, double lng, int myRadius, String type) {
         recommandPlace = new ArrayList<PlaceVo>();
 
@@ -67,4 +75,33 @@ public class GetRecommandPlace {
 
         return recommandPlace;
     }
+
+    public String getURL(String place_id) {
+        String url = null;
+
+        Log.d("EYEDEAR", place_id);
+
+        String URL = "https://maps.googleapis.com/maps/api/place/details/json";
+        HttpGet get = new HttpGet(URL
+                + "?placeid=" + place_id
+                + "&key=" + "AIzaSyAv7acRpN8ZEL0QXqQNLpjm4cezHILCVOk");
+
+        DefaultHttpClient client = new DefaultHttpClient();
+
+        try {
+            HttpResponse response = client.execute(get);
+            HttpEntity resEntry = response.getEntity();
+
+            String jsonString = EntityUtils.toString(resEntry);
+            JSONObject jsonObject = new JSONObject(jsonString);
+
+            url = jsonObject.getJSONObject("result").getString("url");
+
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+
+        return url;
+    }
+
 }

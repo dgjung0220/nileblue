@@ -38,6 +38,7 @@
         </activity>
         <activity android:name=".MemoActivity"/>
         <activity android:name=".WeatherActivity"/>
+        <activity android:name=".PlaceWebView"/>
 
         <receiver
             android:name=".Services.AlarmReceiver"
