@@ -35,6 +35,10 @@ public class LocationStateDBHelper extends SQLiteOpenHelper {
                 "rating String," +
                 "icon String," +
                 "openNow boolean)");
+        db.execSQL("CREATE TABLE IF NOT EXISTS ALARMTIME(" +
+                "alarm_id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "hour INTEGER," +
+                "minute INTEGER)");
     }
 
     @Override

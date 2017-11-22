@@ -9,6 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bearpot.dgjung.nileblue.Memo.MemoManager;
@@ -22,6 +23,8 @@ import com.google.android.gms.maps.model.LatLng;
 
 public class MemoActivity extends AppCompatActivity {
     private EditText memoEdit = null;
+    private TextView locationView = null;
+
     private MemoManager mManager = null;
     private LocationVo currentPosition;
     private MemoVo memoInfo;
@@ -36,6 +39,8 @@ public class MemoActivity extends AppCompatActivity {
         setContentView(R.layout.memo_main);
 
         memoEdit = (EditText) findViewById(R.id.memo_edit);
+        locationView = (TextView) findViewById(R.id.locationView);
+
         mManager = new MemoManager(this);
 
         intent = new Intent(this.getIntent());
@@ -44,6 +49,7 @@ public class MemoActivity extends AppCompatActivity {
 
         if (memoInfo != null) {
             memoEdit.setText(memoInfo.getDescription());
+            locationView.setText(memoInfo.getLocation().getLat() + "," + memoInfo.getLocation().getLng());
             editable = true;
         }
     }

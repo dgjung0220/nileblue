@@ -7,7 +7,7 @@
         android:title="장소추천"
         app:showAsAction="ifRoom"/>
     <item android:id="@+id/weather_context"
-        android:title="날씨"
+        android:title="날씨설정"
         app:showAsAction="withText"/>
     <item android:id="@+id/action_test"
         android:title="문의하기"

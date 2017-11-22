@@ -59,6 +59,8 @@ public class PlaceDBHelper extends SQLiteOpenHelper {
             Log.d("EYEDEAR", place_id +","+name);
             results.add(new PlaceVo(place_id, name, lat, lng));
         }
+
+        cursor.close();
         return results;
     }
 }

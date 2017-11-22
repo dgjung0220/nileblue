@@ -39,9 +39,15 @@
         <activity android:name=".MemoActivity"/>
         <activity android:name=".WeatherActivity"/>
 
+        <receiver
+            android:name=".Services.AlarmReceiver"
+            android:process=":remote"/>
+
         <service android:name=".Services.AwarenessService" />
-        <service android:name=".Services.GeofenceTransitionsIntentService" />
+        <service android:name=".Services.GeofenceTransitionsIntentService"/>
         <service android:name=".Services.WeatherFloatingService" />
+        <service android:name=".Services.AlarmService"/>
+
     </application>
 
 </manifest>
