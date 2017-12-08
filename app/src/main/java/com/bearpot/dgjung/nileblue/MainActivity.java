@@ -143,13 +143,15 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
         googleMap.setOnMapLongClickListener(this);
         addAllMarker(googleMap);
 
-        LocationServices.getGeofencingClient(this).addGeofences(getGeofencingRequeset(), getGeofenceTransitionPendingIntent())
-                .addOnSuccessListener(this, new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.d("EYEDEAR","Geofencing");
-                    }
-                });
+        if (!mGeofenceList.isEmpty()) {
+            LocationServices.getGeofencingClient(this).addGeofences(getGeofencingRequeset(), getGeofenceTransitionPendingIntent())
+                    .addOnSuccessListener(this, new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            Log.d("EYEDEAR","Geofencing");
+                        }
+                    });
+        }
 
         googleMap.setOnMarkerClickListener(this);
         addRecommandMarker(googleMap);
@@ -160,8 +162,7 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
         @Override
         public void onInfoWindowClick(Marker marker) {
             String place_id = (String) marker.getTag();
-            Toast.makeText(getApplicationContext(), place_id, Toast.LENGTH_SHORT).show();
-
+            //Toast.makeText(getApplicationContext(), place_id, Toast.LENGTH_SHORT).show();
 
             Thread getPlaceDetailThread = new Thread() {
                 public void run() {
@@ -236,7 +237,7 @@ public class MainActivity extends AppCompatActivity implements GoogleMap.OnMapLo
         Geofence fence = new Geofence.Builder()
                 .setRequestId(id)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_DWELL | Geofence.GEOFENCE_TRANSITION_EXIT)
-                .setCircularRegion(latitude, longitude, 50)
+                .setCircularRegion(latitude, longitude, 500)
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
                 .setLoiteringDelay(1000)
                 .build();

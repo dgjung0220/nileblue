@@ -7,3 +7,5 @@
 /build
 /captures
 .externalNativeBuild
+/app/src/main/java/com/bearpot/dgjung/nileblue/Configs.java
+/app/src/main/res/xml/configs.xml

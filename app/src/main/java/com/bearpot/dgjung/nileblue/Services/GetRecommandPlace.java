@@ -3,6 +3,7 @@ package com.bearpot.dgjung.nileblue.Services;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.bearpot.dgjung.nileblue.Configs;
 import com.bearpot.dgjung.nileblue.VO.PlaceVo;
 
 import org.apache.http.HttpEntity;
@@ -11,7 +12,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -24,6 +24,7 @@ import java.util.List;
 public class GetRecommandPlace extends AsyncTask {
 
     private ArrayList<PlaceVo> recommandPlace;
+    private String Google_API = Configs.getNaverApi();
 
     public GetRecommandPlace() {}
 
@@ -40,13 +41,14 @@ public class GetRecommandPlace extends AsyncTask {
         HttpGet get = new HttpGet(URL + "?location=" + lat + "," + lng
                 + "&radius=" + myRadius
                 + "&types=" + type
-                + "&key=" + "AIzaSyAv7acRpN8ZEL0QXqQNLpjm4cezHILCVOk");
+                + "&key=" + Google_API);
         Log.d("EYEDEAR", "Place API 이용 내역 : "+
                 URL +
                 "?location=" + lat + "," + lng
                 + "&radius=" + myRadius
                 + "&name=" + type
-                + "&key=" + "AIzaSyAv7acRpN8ZEL0QXqQNLpjm4cezHILCVOk");
+                + "&key=" + Google_API);
+
 
         DefaultHttpClient client = new DefaultHttpClient();
 
@@ -84,7 +86,7 @@ public class GetRecommandPlace extends AsyncTask {
         String URL = "https://maps.googleapis.com/maps/api/place/details/json";
         HttpGet get = new HttpGet(URL
                 + "?placeid=" + place_id
-                + "&key=" + "AIzaSyAv7acRpN8ZEL0QXqQNLpjm4cezHILCVOk");
+                + "&key=" + Google_API);
 
         DefaultHttpClient client = new DefaultHttpClient();
 

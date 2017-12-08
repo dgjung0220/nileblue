@@ -23,10 +23,10 @@
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyAv7acRpN8ZEL0QXqQNLpjm4cezHILCVOk" />
+            android:value="@xml/configs" />
         <meta-data
             android:name="com.google.android.awareness.API_KEY"
-            android:value="AIzaSyAv7acRpN8ZEL0QXqQNLpjm4cezHILCVOk" />
+            android:value="@xml/configs" />
 
 
         <activity android:name=".MainActivity">
